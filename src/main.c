@@ -100,7 +100,7 @@ int main_real(int argc, const char *argv[])
 		case COMMAND_COMPILE_BENCHMARK:
 		case COMMAND_COMPILE_TEST:
 		case COMMAND_DOCGEN:
-			if (vec_size(build_options.files) > 0)
+			if (vec_size(build_options.files) > 0 || build_options.read_stdin)
 			{
 				compile_target(&build_options);
 			}

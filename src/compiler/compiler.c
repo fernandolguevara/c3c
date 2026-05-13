@@ -484,6 +484,11 @@ void compiler_compile(void)
 		exit_compiler(COMPILER_SUCCESS_EXIT);
 	}
 	compiler_sema_time = bench_mark();
+	if (compiler.build.is_non_project && compiler.build.type == TARGET_TYPE_EXECUTABLE && !compiler.context.main && !compiler.build.no_entry)
+	{
+		free_arenas();
+		return;
+	}
 	Module **modules = compiler.context.module_list;
 	unsigned module_count = vec_size(modules);
 	if (module_count > MAX_MODULES)

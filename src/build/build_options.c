@@ -7,6 +7,10 @@
 #include "build_internal.h"
 #include "git_hash.h"
 
+#if PLATFORM_WINDOWS
+#include <io.h>
+#endif
+
 extern int llvm_version_major;
 bool silence_deprecation;
 
@@ -35,6 +39,7 @@ static void print_all_targets(void);
 static int parse_option_select(const char *start, unsigned count, const char **elements);
 static void print_cmd(const char *command, const char *desc);
 static void print_opt(const char *option, const char *desc);
+static bool stdin_has_input(void);
 
 #define parse_opt_select(type_, start_, elements_) (type_)parse_option_select(start_, ELEMENTLEN(elements_), elements_)
 
@@ -1876,6 +1881,18 @@ BuildOptions parse_arguments(int argc, const char *argv[])
 	{
 		FAIL_WITH_ERR("Missing a compiler command such as 'compile' or 'build'.");
 	}
+	if (!build_options.read_stdin && !build_options.files && stdin_has_input())
+	{
+		switch (build_options.command)
+		{
+			case COMMAND_COMPILE:
+			case COMMAND_COMPILE_RUN:
+				build_options.read_stdin = true;
+				break;
+			default:
+				break;
+		}
+	}
 	if (build_options.arch_os_target_override == ANDROID_AARCH64 ||
 	    build_options.arch_os_target_override == ANDROID_X86_64)
 	{
@@ -2120,4 +2137,13 @@ static void print_cmd(const char *command, const char *desc)
 static void print_opt(const char *option, const char *desc)
 {
 	printf("  %-26s - %s\n", option, desc);
+}
+
+static bool stdin_has_input(void)
+{
+#if PLATFORM_WINDOWS
+	return !_isatty(_fileno(stdin));
+#else
+	return !isatty(fileno(stdin));
+#endif
 }
